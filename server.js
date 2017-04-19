@@ -3,10 +3,14 @@ var express    = require('express');        // call express
 var app        = express();                 // define our app using express
 var bodyParser = require('body-parser');
 
-var mongoose = require('mongoose');
-mongoose.connect('mongodb://<dbusername>:<dbpass>@ds061506.mlab.com:61506/spcprojecttest')
+var mongoose   = require('mongoose');
+mongoose.connect('mongodb://<dbuser>:<dbpass>@ds061506.mlab.com:61506/spcprojecttest');
 
-var Bear = require('./app/models/bear');
+mongoose.connection.on('error', function (err) {
+  if(err) console.log(err);
+});
+
+var Bear     = require('./app/models/bear');
 
 // configure app to use bodyParser()
 // this will let us get the data from a POST
@@ -19,6 +23,7 @@ var port = process.env.PORT || 8080;        // set our port
 // =============================================================================
 var router = express.Router();              // get an instance of the express Router
 
+// middleware to use for all requests
 router.use(function(req, res, next) {
     // do logging
     console.log('Something is happening.');
@@ -31,26 +36,20 @@ router.get('/', function(req, res) {
 });
 
 // more routes for our API will happen here
-
 // on routes that end in /bears
 // ----------------------------------------------------
 router.route('/bears')
 
-    // create a bear (accessed at POST http://localhost:8080/api/bears)
-    .post(function(req, res) {
+// get all the bears (accessed at GET http://localhost:8080/api/bears)
+.get(function(req, res) {
+    Bear.find(function(err, bears) {
+        if (err)
+            res.send(err);
 
-        var bear = new Bear();      // create a new instance of the Bear model
-        bear.name = req.body.name;  // set the bears name (comes from the request)
-
-        // save the bear and check for errors
-        bear.save(function(err) {
-            if (err)
-                res.send(err);
-
-            res.json({ message: 'Bear created!' });
-        });
-
+        res.json(bears);
     });
+});
+
 
 
 // REGISTER OUR ROUTES -------------------------------
